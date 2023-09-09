@@ -11,6 +11,9 @@ cd .. && make runserver
 
 Docker is required to run this application. See [docker documentation](https://docs.docker.com/engine/install/) for details on how to install for your OS.
 
+![image](https://github.com/alexfricker/lesson-planner/assets/67075196/0793dee9-d847-4fc7-adff-fb92940e72d5)
+
+
 ## CI/CD
 Example Gitlab CI file is included [.gitlab-ci.yml](./.gitlab-ci.yml) and builds a multiarch image for deployment to kubernetes.
 
