@@ -9,6 +9,8 @@ cd frontend && npm install
 cd .. && make runserver
 ```
 
+Docker is required to run this application. See [docker documentation](https://docs.docker.com/engine/install/) for details on how to install for your OS.
+
 ## CI/CD
 Example Gitlab CI file is included [.gitlab-ci.yml](./.gitlab-ci.yml) and builds a multiarch image for deployment to kubernetes.
 
