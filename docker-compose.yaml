@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+
+  psql:
+    image: postgres:14
+    ports:
+      - '5432:5432'
+    environment:
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+
+  api:
+    image: lesson-planner
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command:
+      - "python3"
+      - "manage.py"
+      - "runserver"
+      - "0.0.0.0:8000"
+    env_file:
+      - ".env.local"
+    environment:
+      - DJANGO_SECRET_KEY=insecure
+    ports:
+      - 8000:8000
+    volumes:
+      - ./lesson_planner:/app/lesson_planner

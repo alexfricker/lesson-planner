@@ -1,0 +1,65 @@
+stages:
+  - build
+  - deploy
+
+build-arm:
+  stage: build
+  tags: [arm]
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - arm_path="$CI_REGISTRY_IMAGE/arm"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      fi
+    - docker build --pull -t "$arm_path${tag}" .
+    - docker push "$arm_path${tag}"
+
+build-amd:
+  stage: build
+  tags: [amd]
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - amd_path="$CI_REGISTRY_IMAGE/amd"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      fi
+    - docker build --pull -t "$amd_path${tag}" .
+    - docker push "$amd_path${tag}"
+
+build-manifest:
+  stage: build
+  tags: [arm]
+  needs: [build-amd, build-arm]
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      fi
+    - docker manifest rm "$CI_REGISTRY_IMAGE${tag}" || true
+    - docker manifest create "$CI_REGISTRY_IMAGE${tag}" "$CI_REGISTRY_IMAGE/arm${tag}" "$CI_REGISTRY_IMAGE/amd${tag}"
+    - docker manifest push "$CI_REGISTRY_IMAGE${tag}"
+
+deploy:
+  stage: deploy
+  script:
+    - oc config get-contexts
+    - oc config use-context internal-apps/k8s-control:openshift-ia-agent
+    - oc rollout restart deploy lesson-planner -n lesson-planner
